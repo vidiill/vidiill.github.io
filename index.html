@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Under Construction — System Initializing</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Tailwind Custom Configuration -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        emerald: {
+                            450: '#10b981',
+                            950: '#022c22',
+                        }
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'grid-flow': 'gridFlow 20s linear infinite',
+                    },
+                    keyframes: {
+                        gridFlow: {
+                            '0%': { transform: 'translateY(0)' },
+                            '100%': { transform: 'translateY(40px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom styling for ambient grid, glassmorphism, and subtle scrollbars */
+        body {
+            background-color: #050807;
+            color: #f8fafc;
+            overflow-x: hidden;
+            user-select: none;
+        }
+
+        /* Animated Emerald Perspective Grid */
+        .bg-grid-pattern {
+            background-size: 40px 40px;
+            background-image: 
+                linear-gradient(to right, rgba(16, 185, 129, 0.07) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(16, 185, 129, 0.07) 1px, transparent 1px);
+            mask-image: radial-gradient(ellipse 80% 70% at 50% 50%, #000 30%, transparent 100%);
+            -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 50%, #000 30%, transparent 100%);
+        }
+
+        /* Glassmorphism Card with Subtle Emerald Border Glow */
+        .glass-card {
+            background: rgba(10, 18, 15, 0.65);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(16, 185, 129, 0.18);
+            box-shadow: 
+                0 25px 50px -12px rgba(0, 0, 0, 0.8),
+                0 0 40px -10px rgba(16, 185, 129, 0.12),
+                inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+        }
+
+        /* Custom Terminal Scrollbar */
+        .terminal-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        .terminal-scroll::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+        .terminal-scroll::-webkit-scrollbar-thumb {
+            background: rgba(16, 185, 129, 0.3);
+            border-radius: 9999px;
+        }
+
+        /* Blinking Terminal Cursor */
+        .cursor-blink {
+            animation: blink 1s step-end infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        /* Subtle Text Glow */
+        .emerald-text-glow {
+            text-shadow: 0 0 28px rgba(16, 185, 129, 0.35);
+        }
+    </style>
+</head>
+<body class="min-h-screen w-full flex items-center justify-center relative p-4 sm:p-6 md:p-8 antialiased selection:bg-emerald-500/30 selection:text-emerald-200">
+
+    <!-- Interactive Particle Canvas Backdrop -->
+    <canvas id="particle-canvas" class="fixed inset-0 w-full h-full pointer-events-none z-0"></canvas>
+
+    <!-- Animated Grid Layer -->
+    <div class="fixed inset-0 bg-grid-pattern animate-grid-flow pointer-events-none z-0 opacity-80"></div>
+
+    <!-- Ambient Top & Bottom Emerald Glow Orbs -->
+    <div class="fixed -top-40 left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-emerald-500/15 rounded-full blur-[120px] pointer-events-none z-0 animate-pulse-slow"></div>
+    <div class="fixed -bottom-40 right-1/4 w-[400px] h-[250px] bg-teal-500/10 rounded-full blur-[100px] pointer-events-none z-0"></div>
+
+    <!-- Interactive Cursor-Follow Spotlight Glow -->
+    <div id="cursor-glow" class="fixed w-[450px] h-[450px] rounded-full pointer-events-none z-0 transition-opacity duration-500 opacity-0"
+         style="background: radial-gradient(circle, rgba(16, 185, 129, 0.14) 0%, rgba(16, 185, 129, 0.03) 45%, transparent 70%); transform: translate(-50%, -50%);">
+    </div>
+
+    <!-- Main Glassmorphism Container -->
+    <main id="main-card" class="glass-card relative z-10 w-full max-w-2xl rounded-3xl p-6 sm:p-10 md:p-12 transition-transform duration-300 ease-out">
+        
+        <!-- Top Header Bar: Live Status Pill & System Clock -->
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-8 pb-5 border-b border-emerald-500/15">
+            <!-- Animated Status Indicator -->
+            <div class="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-emerald-950/70 border border-emerald-500/30 shadow-inner">
+                <span class="relative flex h-2.5 w-2.5">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                </span>
+                <span class="font-mono text-xs font-medium tracking-wider text-emerald-300 uppercase">
+                    STATUS: IN DEVELOPMENT
+                </span>
+            </div>
+
+            <!-- Live Uptime / Session Timer -->
+            <div class="font-mono text-xs text-slate-400 flex items-center gap-2">
+                <span class="text-emerald-500/70">BUILD</span>
+                <span class="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-slate-300">v0.4.2-alpha</span>
+            </div>
+        </div>
+
+        <!-- Primary Hero Message -->
+        <div class="space-y-4 mb-9 text-center sm:text-left">
+            <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-white leading-[1.15] emerald-text-glow">
+                this website is unfinished. <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-500">Come back later!</span>
+            </h1>
+            <p class="text-slate-400 text-sm sm:text-base max-w-xl leading-relaxed font-normal">
+                We are currently assembling the core architecture, refining visual modules, and running diagnostics. Check back soon for the full launch.
+            </p>
+        </div>
+
+        <!-- Interactive Build Progress Section -->
+        <div class="mb-8 p-4 sm:p-5 rounded-2xl bg-black/40 border border-white/5 space-y-3">
+            <div class="flex items-center justify-between text-xs font-mono">
+                <span class="text-slate-300 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-emerald-400 animate-spin" style="animation-duration: 6s;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span>COMPILATION PROGRESS</span>
+                </span>
+                <span id="progress-percent" class="text-emerald-400 font-semibold">64%</span>
+            </div>
+
+            <!-- Interactive Progress Track -->
+            <div id="progress-track" title="Click to run a diagnostic boost" class="w-full h-2.5 bg-slate-900/90 rounded-full overflow-hidden p-0.5 border border-emerald-500/20 cursor-pointer group">
+                <div id="progress-bar" class="h-full rounded-full bg-gradient-to-r from-emerald-600 via-emerald-400 to-teal-300 transition-all duration-500 ease-out relative" style="width: 64%;">
+                    <div class="absolute inset-0 bg-white/20 group-hover:bg-white/40 transition-colors"></div>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between text-[11px] font-mono text-slate-500">
+                <span>Click bar or ping button to test build pipeline</span>
+                <span id="build-stage-label" class="text-emerald-500/80">Stage: UI_Hydration</span>
+            </div>
+        </div>
+
+        <!-- Live Terminal-Style Console Output -->
+        <div class="rounded-2xl bg-[#030605] border border-emerald-500/20 overflow-hidden shadow-inner mb-8">
+            <!-- Terminal Header -->
+            <div class="flex items-center justify-between px-4 py-2.5 bg-white/[0.03] border-b border-white/5">
+                <div class="flex items-center gap-1.5">
+                    <span class="w-2.5 h-2.5 rounded-full bg-rose-500/70"></span>
+                    <span class="w-2.5 h-2.5 rounded-full bg-amber-500/70"></span>
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500/70"></span>
+                </div>
+                <span class="font-mono text-[11px] text-slate-500">deploy-worker — zsh</span>
+                <button id="clear-logs-btn" class="font-mono text-[11px] text-slate-400 hover:text-emerald-400 transition-colors cursor-pointer">
+                    clear
+                </button>
+            </div>
+
+            <!-- Terminal Log Stream -->
+            <div id="terminal-output" class="terminal-scroll p-4 h-36 overflow-y-auto font-mono text-xs space-y-1.5 text-slate-300">
+                <!-- Populated dynamically via JS -->
+            </div>
+        </div>
+
+        <!-- Bottom Action Bar -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <button id="ping-btn" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 active:scale-[0.98] text-slate-950 font-semibold text-sm transition-all shadow-lg shadow-emerald-500/20 cursor-pointer">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                <span>Ping Build Server</span>
+            </button>
+
+            <div id="toast-feedback" class="font-mono text-xs text-emerald-400 opacity-0 transition-opacity duration-300">
+                ✓ Diagnostic packet acknowledged
+            </div>
+        </div>
+    </main>
+
+    <!-- Interactive Logic: Canvas Particles, Cursor Spotlight, Live Terminal & Progress -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // ==========================================
+            // 1. CURSOR-FOLLOW AMBIENT SPOTLIGHT GLOW
+            // ==========================================
+            const cursorGlow = document.getElementById('cursor-glow');
+            const mainCard = document.getElementById('main-card');
+            let mouseX = window.innerWidth / 2;
+            let mouseY = window.innerHeight / 2;
+            let glowX = mouseX;
+            let glowY = mouseY;
+
+            const updatePointer = (x, y) => {
+                mouseX = x;
+                mouseY = y;
+                cursorGlow.style.opacity = '1';
+            };
+
+            window.addEventListener('mousemove', (e) => updatePointer(e.clientX, e.clientY));
+            window.addEventListener('touchmove', (e) => {
+                if (e.touches.length > 0) {
+                    updatePointer(e.touches[0].clientX, e.touches[0].clientY);
+                }
+            }, { passive: true });
+
+            document.addEventListener('mouseleave', () => {
+                cursorGlow.style.opacity = '0';
+            });
+
+            // Smooth interpolation loop for cursor spotlight
+            function animateSpotlight() {
+                glowX += (mouseX - glowX) * 0.12;
+                glowY += (mouseY - glowY) * 0.12;
+                cursorGlow.style.left = `${glowX}px`;
+                cursorGlow.style.top = `${glowY}px`;
+                requestAnimationFrame(animateSpotlight);
+            }
+            animateSpotlight();
+
+            // ==========================================
+            // 2. INTERACTIVE EMERALD PARTICLE NETWORK
+            // ==========================================
+            const canvas = document.getElementById('particle-canvas');
+            const ctx = canvas.getContext('2d');
+            let particles = [];
+
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                initParticles();
+            }
+
+            class Particle {
+                constructor() {
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.vx = (Math.random() - 0.5) * 0.45;
+                    this.vy = (Math.random() - 0.5) * 0.45;
+                    this.radius = Math.random() * 1.8 + 0.6;
+                    this.alpha = Math.random() * 0.5 + 0.15;
+                }
+
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+
+                    // Wrap smoothly around viewport edges
+                    if (this.x < 0) this.x = canvas.width;
+                    if (this.x > canvas.width) this.x = 0;
+                    if (this.y < 0) this.y = canvas.height;
+                    if (this.y > canvas.height) this.y = 0;
+
+                    // Subtle attraction/repulsion near pointer
+                    const dx = mouseX - this.x;
+                    const dy = mouseY - this.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < 140) {
+                        this.x -= dx * 0.008;
+                        this.y -= dy * 0.008;
+                    }
+                }
+
+                draw() {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(16, 185, 129, ${this.alpha})`;
+                    ctx.fill();
+                }
+            }
+
+            function initParticles() {
+                const count = Math.min(Math.floor((canvas.width * canvas.height) / 18000), 75);
+                particles = [];
+                for (let i = 0; i < count; i++) {
+                    particles.push(new Particle());
+                }
+            }
+
+            function animateParticles() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                for (let i = 0; i < particles.length; i++) {
+                    particles[i].update();
+                    particles[i].draw();
+
+                    // Connect nearby particles with faint emerald lines
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const dx = particles[i].x - particles[j].x;
+                        const dy = particles[i].y - particles[j].y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+
+                        if (distance < 110) {
+                            ctx.beginPath();
+                            ctx.strokeStyle = `rgba(16, 185, 129, ${0.12 * (1 - distance / 110)})`;
+                            ctx.lineWidth = 0.7;
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.stroke();
+                        }
+                    }
+                }
+                requestAnimationFrame(animateParticles);
+            }
+
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+            animateParticles();
+
+            // ==========================================
+            // 3. LIVE TERMINAL CONSOLE & BUILD PROGRESS
+            // ==========================================
+            const terminalOutput = document.getElementById('terminal-output');
+            const progressBar = document.getElementById('progress-bar');
+            const progressPercent = document.getElementById('progress-percent');
+            const progressTrack = document.getElementById('progress-track');
+            const buildStageLabel = document.getElementById('build-stage-label');
+            const pingBtn = document.getElementById('ping-btn');
+            const clearLogsBtn = document.getElementById('clear-logs-btn');
+            const toastFeedback = document.getElementById('toast-feedback');
+
+            let currentProgress = 64;
+
+            const logTemplates = [
+                { type: 'info', msg: 'Initializing environment variables...' },
+                { type: 'ok',   msg: 'Connected to edge node [eu-central-1]' },
+                { type: 'warn', msg: 'Notice: Public routes locked until v1.0 release' },
+                { type: 'info', msg: 'Compiling stylesheet tokens & glass shaders...' },
+                { type: 'ok',   msg: 'Asset integrity verified (SHA-256)' },
+                { type: 'info', msg: 'Awaiting final content deployment...' },
+                { type: 'warn', msg: 'Status check: this website is unfinished. Come back later!' }
+            ];
+
+            const stages = [
+                'Stage: Core_Routing',
+                'Stage: UI_Hydration',
+                'Stage: Shader_Caching',
+                'Stage: Asset_Bundling',
+                'Stage: Final_QA_Pending'
+            ];
+
+            function getTimestamp() {
+                const now = new Date();
+                return now.toTimeString().split(' ')[0];
+            }
+
+            function appendLog(type, text) {
+                const line = document.createElement('div');
+                line.className = 'flex items-start gap-2 leading-relaxed';
+
+                let badgeColor = 'text-emerald-400';
+                let prefix = '[OK]';
+                if (type === 'warn') {
+                    badgeColor = 'text-amber-400';
+                    prefix = '[WARN]';
+                } else if (type === 'info') {
+                    badgeColor = 'text-teal-300';
+                    prefix = '[SYS]';
+                }
+
+                line.innerHTML = `
+                    <span class="text-slate-600 shrink-0">${getTimestamp()}</span>
+                    <span class="${badgeColor} font-semibold shrink-0">${prefix}</span>
+                    <span class="text-slate-300 break-words">${text}</span>
+                `;
+
+                terminalOutput.appendChild(line);
+                terminalOutput.scrollTop = terminalOutput.scrollHeight;
+            }
+
+            // Seed initial terminal logs sequentially
+            logTemplates.forEach((item, index) => {
+                setTimeout(() => {
+                    appendLog(item.type, item.msg);
+                }, index * 320);
+            });
+
+            // Periodic background heartbeat log
+            setInterval(() => {
+                const randomMessages = [
+                    { type: 'info', msg: 'Heartbeat OK — worker thread idle (14ms)' },
+                    { type: 'ok',   msg: 'Cache synchronized with staging branch' },
+                    { type: 'warn', msg: 'Build incomplete: holding public gateway' }
+                ];
+                const pick = randomMessages[Math.floor(Math.random() * randomMessages.length)];
+                appendLog(pick.type, pick.msg);
+            }, 6500);
+
+            // Interactive Progress Boost Function
+            function triggerBuildPing() {
+                // Increment progress up to 96% before cycling back to 64%
+                if (currentProgress < 96) {
+                    currentProgress += Math.floor(Math.random() * 6) + 3;
+                    if (currentProgress > 96) currentProgress = 96;
+                } else {
+                    currentProgress = 64;
+                    appendLog('info', 'Cycle reset: re-verifying staged modules...');
+                }
+
+                progressBar.style.width = `${currentProgress}%`;
+                progressPercent.textContent = `${currentProgress}%`;
+
+                const stageIdx = Math.min(Math.floor((currentProgress - 60) / 8), stages.length - 1);
+                buildStageLabel.textContent = stages[Math.max(0, stageIdx)];
+
+                const latency = Math.floor(Math.random() * 18) + 8;
+                appendLog('ok', `Manual ping received (${latency}ms) — build at ${currentProgress}%`);
+
+                // Show brief confirmation feedback
+                toastFeedback.style.opacity = '1';
+                clearTimeout(window.toastTimer);
+                window.toastTimer = setTimeout(() => {
+                    toastFeedback.style.opacity = '0';
+                }, 2200);
+            }
+
+            pingBtn.addEventListener('click', triggerBuildPing);
+            progressTrack.addEventListener('click', triggerBuildPing);
+
+            clearLogsBtn.addEventListener('click', () => {
+                terminalOutput.innerHTML = '';
+                appendLog('info', 'Console cleared. Monitoring active...');
+            });
+        });
+    </script>
+</body>
+</html>
